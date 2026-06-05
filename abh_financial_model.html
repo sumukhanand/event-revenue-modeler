@@ -1,0 +1,224 @@
+
+<style>
+h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.section{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1rem;background:var(--color-background-primary)}
+.section-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.06em;margin:0 0 1rem}
+.row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.row label{font-size:13px;color:var(--color-text-secondary);flex:0 0 160px}
+.row input[type=number]{width:90px;font-size:13px;padding:4px 8px}
+.row input[type=range]{flex:1}
+.row .val{font-size:13px;font-weight:500;min-width:36px;text-align:right}
+.tier-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.tier-cell{display:flex;flex-direction:column;gap:4px}
+.tier-cell label{font-size:12px;color:var(--color-text-secondary)}
+.tier-cell input{font-size:13px;padding:4px 8px}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:1rem}
+.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:1rem}
+.metric .mlabel{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
+.metric .mval{font-size:22px;font-weight:500}
+.detail-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.detail-row:last-child{border-bottom:none}
+.detail-label{color:var(--color-text-secondary)}
+.detail-val{font-weight:500}
+.status-bar{border-radius:var(--border-radius-md);padding:10px 14px;font-size:13px;font-weight:500;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center}
+.warn{background:var(--color-background-warning);color:var(--color-text-warning)}
+.good{background:var(--color-background-success);color:var(--color-text-success)}
+.bad{background:var(--color-background-danger);color:var(--color-text-danger)}
+.cap-warn{font-size:11px;color:var(--color-text-warning);margin-top:4px}
+.toggle-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px;color:var(--color-text-secondary)}
+.split-btn{font-size:12px;padding:3px 10px;cursor:pointer;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.split-btn:hover{background:var(--color-background-primary)}
+</style>
+
+<h2 class="sr-only">Anything But House — financial model. Adjust inputs to see break-even, profit, and capacity outcomes.</h2>
+
+<div id="app"></div>
+
+<script>
+const DEFAULTS = {
+  ebPrice:5, t1Price:10, t2Price:12, t3Price:15, artistPrice:10,
+  ebCount:25, t1Count:60, t2Count:50, t3Count:30, artistCount:20,
+  manualSplit:false,
+  totalTickets:185,
+  guestlist:15,
+  barSpend:18,
+  venue:480, ads:200, media:0, extra:0,
+  raFee:8,
+  profitShare:20,
+  barMin:2000
+};
+
+let s = {...DEFAULTS};
+
+function tierRevenue(){
+  if(!s.manualSplit){
+    const total = s.totalTickets;
+    s.ebCount = Math.round(total*0.13);
+    s.t1Count = Math.round(total*0.40);
+    s.t2Count = Math.round(total*0.30);
+    s.t3Count = Math.round(total*0.12);
+    s.artistCount = Math.round(total*0.05);
+  }
+  const gross = s.ebCount*s.ebPrice + s.t1Count*s.t1Price + s.t2Count*s.t2Price + s.t3Count*s.t3Price + s.artistCount*s.artistPrice;
+  const net = gross*(1-s.raFee/100);
+  return {gross, net, total: s.ebCount+s.t1Count+s.t2Count+s.t3Count+s.artistCount};
+}
+
+function calc(){
+  const {gross, net, total:ticketTotal} = tierRevenue();
+  const attendance = ticketTotal + s.guestlist;
+  const barTotal = attendance * s.barSpend;
+  const barShortfall = Math.max(0, s.barMin - barTotal);
+  const fixedCosts = s.venue + s.ads + s.media + s.extra;
+  const totalCosts = fixedCosts + barShortfall;
+  const revenue = net;
+  const grossProfit = revenue - totalCosts;
+  const artistCut = grossProfit > 0 ? grossProfit*(s.profitShare/100) : 0;
+  const netProfit = grossProfit - artistCut;
+  return {attendance, ticketTotal, barTotal, barShortfall, fixedCosts, totalCosts, revenue, grossProfit, artistCut, netProfit};
+}
+
+function fmt(n){return '£'+Math.round(n).toLocaleString()}
+function num(n){return Math.round(n).toLocaleString()}
+
+function render(){
+  const r = calc();
+  const over200 = r.attendance > 200;
+  const over260 = r.attendance > 260;
+  let statusClass = r.netProfit >= 0 ? 'good' : 'bad';
+  let statusMsg = r.netProfit >= 0 ? `Profitable by ${fmt(r.netProfit)} after ${s.profitShare}% artist share` : `Loss of ${fmt(Math.abs(r.netProfit))}`;
+  let statusIcon = r.netProfit >= 0 ? '✓' : '✗';
+
+  document.getElementById('app').innerHTML = `
+<div class="metrics">
+  <div class="metric">
+    <div class="mlabel">Total revenue</div>
+    <div class="mval" style="color:var(--color-text-success)">${fmt(r.revenue)}</div>
+  </div>
+  <div class="metric">
+    <div class="mlabel">Total costs</div>
+    <div class="mval" style="color:var(--color-text-danger)">${fmt(r.totalCosts)}</div>
+  </div>
+  <div class="metric">
+    <div class="mlabel">Net profit</div>
+    <div class="mval" style="color:${r.netProfit>=0?'var(--color-text-success)':'var(--color-text-danger)'}">${fmt(r.netProfit)}</div>
+  </div>
+</div>
+
+<div class="status-bar ${statusClass}">
+  <span>${statusIcon} ${statusMsg}</span>
+  <span>${num(r.attendance)} through the door</span>
+</div>
+
+${over260?'<div class="status-bar bad">⚠ Over max capacity (260) — reduce attendance</div>':over200?'<div class="status-bar warn">⚠ Above realistic max (200) — approaching hard cap</div>':''}
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem">
+<div class="section">
+  <div class="section-title">Revenue breakdown</div>
+  <div class="detail-row"><span class="detail-label">Ticket gross</span><span class="detail-val">${fmt(tierRevenue().gross)}</span></div>
+  <div class="detail-row"><span class="detail-label">RA fee (${s.raFee}%)</span><span class="detail-val" style="color:var(--color-text-danger)">−${fmt(tierRevenue().gross*(s.raFee/100))}</span></div>
+  <div class="detail-row"><span class="detail-label">Net ticket revenue</span><span class="detail-val">${fmt(r.revenue)}</span></div>
+</div>
+<div class="section">
+  <div class="section-title">Cost breakdown</div>
+  <div class="detail-row"><span class="detail-label">Venue</span><span class="detail-val">${fmt(s.venue)}</span></div>
+  <div class="detail-row"><span class="detail-label">Advertising</span><span class="detail-val">${fmt(s.ads)}</span></div>
+  <div class="detail-row"><span class="detail-label">Media</span><span class="detail-val">${fmt(s.media)}</span></div>
+  <div class="detail-row"><span class="detail-label">Other</span><span class="detail-val">${fmt(s.extra)}</span></div>
+  <div class="detail-row"><span class="detail-label">Bar shortfall</span><span class="detail-val" style="color:${r.barShortfall>0?'var(--color-text-danger)':'var(--color-text-secondary)'}">
+    ${r.barShortfall>0?'−'+fmt(r.barShortfall):'none (bar covered)'}
+  </span></div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem">
+<div class="section">
+  <div class="section-title">Bar minimum</div>
+  <div class="detail-row"><span class="detail-label">Bar min</span><span class="detail-val">${fmt(s.barMin)}</span></div>
+  <div class="detail-row"><span class="detail-label">Expected bar spend</span><span class="detail-val">${fmt(r.barTotal)}</span></div>
+  <div class="detail-row"><span class="detail-label">Shortfall liability</span><span class="detail-val" style="color:${r.barShortfall>0?'var(--color-text-danger)':'var(--color-text-success)'}">
+    ${r.barShortfall>0?fmt(r.barShortfall):'£0 — covered'}
+  </span></div>
+</div>
+<div class="section">
+  <div class="section-title">Artist profit share</div>
+  <div class="detail-row"><span class="detail-label">Gross profit</span><span class="detail-val">${fmt(r.grossProfit)}</span></div>
+  <div class="detail-row"><span class="detail-label">Artist share (${s.profitShare}%)</span><span class="detail-val">${fmt(r.artistCut)}</span></div>
+  <div class="detail-row"><span class="detail-label">Your take-home</span><span class="detail-val">${fmt(r.netProfit)}</span></div>
+</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Ticket inputs</div>
+  <div class="toggle-row">
+    <span>Ticket split:</span>
+    <button class="split-btn" onclick="toggleSplit()">${s.manualSplit?'Switch to auto-split':'Switch to manual'}</button>
+    ${!s.manualSplit?`<span style="font-size:12px">auto-split from total tickets sold</span>`:''}
+  </div>
+  ${!s.manualSplit?`
+  <div class="row">
+    <label>Total tickets sold</label>
+    <input type="range" min="0" max="240" step="1" value="${s.totalTickets}" oninput="update('totalTickets',+this.value)">
+    <span class="val">${s.totalTickets}</span>
+  </div>`:`
+  <div class="tier-grid">
+    <div class="tier-cell"><label>Early Bird (£${s.ebPrice})</label><input type="number" min="0" value="${s.ebCount}" oninput="update('ebCount',+this.value)"></div>
+    <div class="tier-cell"><label>Tier 1 (£${s.t1Price})</label><input type="number" min="0" value="${s.t1Count}" oninput="update('t1Count',+this.value)"></div>
+    <div class="tier-cell"><label>Tier 2 (£${s.t2Price})</label><input type="number" min="0" value="${s.t2Count}" oninput="update('t2Count',+this.value)"></div>
+    <div class="tier-cell"><label>Tier 3 / day-of (£${s.t3Price})</label><input type="number" min="0" value="${s.t3Count}" oninput="update('t3Count',+this.value)"></div>
+    <div class="tier-cell"><label>Artist discount (£${s.artistPrice})</label><input type="number" min="0" value="${s.artistCount}" oninput="update('artistCount',+this.value)"></div>
+  </div>`}
+  <div class="row" style="margin-top:10px">
+    <label>Guestlist (free)</label>
+    <input type="range" min="0" max="50" step="1" value="${s.guestlist}" oninput="update('guestlist',+this.value)">
+    <span class="val">${s.guestlist}</span>
+  </div>
+  <div class="row">
+    <label>Bar spend per head</label>
+    <input type="range" min="0" max="40" step="1" value="${s.barSpend}" oninput="update('barSpend',+this.value)">
+    <span class="val">£${s.barSpend}</span>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Ticket tier prices</div>
+  <div class="tier-grid">
+    <div class="tier-cell"><label>Early Bird</label><input type="number" min="1" value="${s.ebPrice}" oninput="update('ebPrice',+this.value)"></div>
+    <div class="tier-cell"><label>Tier 1</label><input type="number" min="1" value="${s.t1Price}" oninput="update('t1Price',+this.value)"></div>
+    <div class="tier-cell"><label>Tier 2</label><input type="number" min="1" value="${s.t2Price}" oninput="update('t2Price',+this.value)"></div>
+    <div class="tier-cell"><label>Tier 3 / day-of</label><input type="number" min="1" value="${s.t3Price}" oninput="update('t3Price',+this.value)"></div>
+    <div class="tier-cell"><label>Artist discount</label><input type="number" min="1" value="${s.artistPrice}" oninput="update('artistPrice',+this.value)"></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Costs & fees</div>
+  <div class="tier-grid">
+    <div class="tier-cell"><label>Venue (£)</label><input type="number" min="0" value="${s.venue}" oninput="update('venue',+this.value)"></div>
+    <div class="tier-cell"><label>Advertising (£)</label><input type="number" min="0" value="${s.ads}" oninput="update('ads',+this.value)"></div>
+    <div class="tier-cell"><label>Media (£)</label><input type="number" min="0" value="${s.media}" oninput="update('media',+this.value)"></div>
+    <div class="tier-cell"><label>Other costs (£)</label><input type="number" min="0" value="${s.extra}" oninput="update('extra',+this.value)"></div>
+    <div class="tier-cell"><label>Bar minimum (£)</label><input type="number" min="0" value="${s.barMin}" oninput="update('barMin',+this.value)"></div>
+    <div class="tier-cell"><label>RA fee (%)</label><input type="number" min="0" max="20" value="${s.raFee}" oninput="update('raFee',+this.value)"></div>
+  </div>
+  <div class="row" style="margin-top:12px">
+    <label>Artist profit share (%)</label>
+    <input type="range" min="0" max="100" step="5" value="${s.profitShare}" oninput="update('profitShare',+this.value)">
+    <span class="val">${s.profitShare}%</span>
+  </div>
+</div>
+`;
+}
+
+function update(key, val){
+  s[key] = val;
+  render();
+}
+
+function toggleSplit(){
+  s.manualSplit = !s.manualSplit;
+  render();
+}
+
+render();
+</script>
