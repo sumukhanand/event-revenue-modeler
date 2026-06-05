@@ -1,247 +1,461 @@
-
-<style>
-h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
-.section{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1rem;background:var(--color-background-primary)}
-.section-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.06em;margin:0 0 1rem}
-.row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-.row label{font-size:13px;color:var(--color-text-secondary);flex:0 0 160px}
-.row input[type=number]{width:90px;font-size:13px;padding:4px 8px}
-.row input[type=range]{flex:1}
-.row .val{font-size:13px;font-weight:500;min-width:36px;text-align:right}
-.tier-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.tier-cell{display:flex;flex-direction:column;gap:4px}
-.tier-cell label{font-size:12px;color:var(--color-text-secondary)}
-.tier-cell input{font-size:13px;padding:4px 8px}
-.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:1rem}
-.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:1rem}
-.metric .mlabel{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
-.metric .mval{font-size:22px;font-weight:500}
-.detail-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
-.detail-row:last-child{border-bottom:none}
-.detail-label{color:var(--color-text-secondary)}
-.detail-val{font-weight:500}
-.status-bar{border-radius:var(--border-radius-md);padding:10px 14px;font-size:13px;font-weight:500;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center}
-.warn{background:var(--color-background-warning);color:var(--color-text-warning)}
-.good{background:var(--color-background-success);color:var(--color-text-success)}
-.bad{background:var(--color-background-danger);color:var(--color-text-danger)}
-.cap-warn{font-size:11px;color:var(--color-text-warning);margin-top:4px}
-.toggle-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px;color:var(--color-text-secondary)}
-.split-btn{font-size:12px;padding:3px 10px;cursor:pointer;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-secondary)}
-.split-btn:hover{background:var(--color-background-primary)}
-</style>
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Revenue Modeler</title>
 <style>
 :root {
-  --color-background-primary: #ffffff;
-  --color-background-secondary: #f5f5f3;
-  --color-background-tertiary: #eeede9;
-  --color-background-success: #eaf3de;
-  --color-background-danger: #fcebeb;
-  --color-background-warning: #faeeda;
-  --color-background-info: #e6f1fb;
-  --color-text-primary: #1a1a18;
-  --color-text-secondary: #5f5e5a;
-  --color-text-success: #3b6d11;
-  --color-text-danger: #a32d2d;
-  --color-text-warning: #854f0b;
-  --color-text-info: #185fa5;
-  --color-border-tertiary: rgba(0,0,0,0.12);
-  --color-border-secondary: rgba(0,0,0,0.25);
-  --color-border-primary: rgba(0,0,0,0.35);
-  --border-radius-md: 8px;
-  --border-radius-lg: 12px;
-  --border-radius-xl: 16px;
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: "SF Mono", "Fira Code", monospace;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f3;
+  --bg-tertiary: #eeede9;
+  --bg-success: #eaf3de;
+  --bg-danger: #fcebeb;
+  --bg-warning: #faeeda;
+  --text-primary: #1a1a18;
+  --text-secondary: #5f5e5a;
+  --text-success: #3b6d11;
+  --text-danger: #a32d2d;
+  --text-warning: #854f0b;
+  --border-soft: rgba(0,0,0,0.10);
+  --border-med: rgba(0,0,0,0.22);
+  --r-md: 8px;
+  --r-lg: 12px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #1c1c1a;
+    --bg-secondary: #252523;
+    --bg-tertiary: #141413;
+    --bg-success: #1a2e0a;
+    --bg-danger: #2e0f0f;
+    --bg-warning: #2e1f08;
+    --text-primary: #e8e7e3;
+    --text-secondary: #9e9d99;
+    --text-success: #7ec44f;
+    --text-danger: #e07070;
+    --text-warning: #e0a050;
+    --border-soft: rgba(255,255,255,0.09);
+    --border-med: rgba(255,255,255,0.18);
+  }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: var(--font-sans);
-  font-size: 16px;
-  color: var(--color-text-primary);
-  background: var(--color-background-tertiary);
-  margin: 0;
-  padding: 1.5rem;
-  max-width: 760px;
+  font-family: var(--font);
+  font-size: 15px;
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+  padding: 1rem;
+  max-width: 780px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
 }
 
-input[type=number], input[type=range] {
-  font-family: var(--font-sans);
+h1.page-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  letter-spacing: 0.03em;
+}
+
+/* ── Metric cards ── */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.metric {
+  background: var(--bg-primary);
+  border: 0.5px solid var(--border-soft);
+  border-radius: var(--r-lg);
+  padding: 14px 14px 12px;
+}
+.metric .mlabel { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+.metric .mval   { font-size: 20px; font-weight: 600; line-height: 1; }
+
+/* ── Status bar ── */
+.status-bar {
+  border-radius: var(--r-md);
+  padding: 10px 14px;
   font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.good { background: var(--bg-success); color: var(--text-success); }
+.bad  { background: var(--bg-danger);  color: var(--text-danger);  }
+.warn { background: var(--bg-warning); color: var(--text-warning); }
+
+/* ── Section ── */
+.section {
+  background: var(--bg-primary);
+  border: 0.5px solid var(--border-soft);
+  border-radius: var(--r-lg);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+}
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 12px;
 }
 
-input[type=number] {
-  border: 0.5px solid var(--color-border-secondary);
-  border-radius: var(--border-radius-md);
-  padding: 5px 8px;
-  background: var(--color-background-primary);
-  color: var(--color-text-primary);
+/* ── Detail rows ── */
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  padding: 6px 0;
+  border-bottom: 0.5px solid var(--border-soft);
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-label { color: var(--text-secondary); }
+.detail-val   { font-weight: 500; }
+
+/* ── Two-col layout (collapses on mobile) ── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 0;
+}
+@media (max-width: 540px) {
+  .two-col { grid-template-columns: 1fr; }
+  .metrics { grid-template-columns: 1fr 1fr 1fr; }
+  .metric .mval { font-size: 16px; }
+}
+
+/* ── Slider+input row ── */
+.input-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.input-row:last-child { margin-bottom: 0; }
+.input-row label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  grid-column: 1 / -1;
+  margin-bottom: -4px;
+}
+.input-row input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
-  box-sizing: border-box;
-}
-
-button {
-  font-family: var(--font-sans);
+  height: 36px;         /* tall hit target */
+  background: transparent;
   cursor: pointer;
+  padding: 0;
 }
+.input-row input[type=range]::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--border-med);
+  border-radius: 2px;
+}
+.input-row input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  margin-top: -9px;
+  border: 2px solid var(--bg-primary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+.input-row input[type=range]::-moz-range-thumb {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  border: 2px solid var(--bg-primary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+.num-input {
+  width: 68px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  border: 0.5px solid var(--border-med);
+  border-radius: var(--r-md);
+  padding: 6px 8px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  text-align: right;
+  -moz-appearance: textfield;
+}
+.num-input::-webkit-outer-spin-button,
+.num-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.unit {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ── Tier grid ── */
+.tier-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+@media (min-width: 500px) {
+  .tier-grid { grid-template-columns: 1fr 1fr 1fr; }
+}
+.tier-cell label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+.tier-cell input[type=number] {
+  width: 100%;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  border: 0.5px solid var(--border-med);
+  border-radius: var(--r-md);
+  padding: 8px 10px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  -moz-appearance: textfield;
+}
+.tier-cell input[type=number]::-webkit-outer-spin-button,
+.tier-cell input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+/* ── Toggle / buttons ── */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.pill-btn {
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 99px;
+  border: 0.5px solid var(--border-med);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.pill-btn:hover { background: var(--bg-tertiary); }
+.pill-btn.active {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border-color: var(--text-primary);
+}
+
+.reset-btn {
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: var(--r-md);
+  border: 0.5px solid var(--border-med);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  margin-left: auto;
+}
+.reset-btn:hover { background: var(--bg-tertiary); }
+
+/* ── Misc ── */
+.mt { margin-top: 8px; }
+.mb8 { margin-bottom: 8px; }
 </style>
+</head>
+<body>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-
-<h2 class="sr-only">Anything But House — financial model. Adjust inputs to see break-even, profit, and capacity outcomes.</h2>
-
+<h1 class="page-title">Anything But House — financial model</h1>
 <div id="app"></div>
 
 <script>
 const DEFAULTS = {
-  ebPrice:5, t1Price:10, t2Price:12, t3Price:15, artistPrice:10,
-  ebCount:25, t1Count:60, t2Count:50, t3Count:30, artistCount:20,
-  manualSplit:false,
-  totalTickets:185,
-  guestlist:15,
-  barSpend:18,
-  venue:480, ads:200, media:0, extra:0,
-  raFee:8,
-  profitShare:20,
-  barMin:2000
+  ebPrice:5, t1Price:10, t2Price:12, t3Price:15, artistPrice:8,
+  ebCount:0, t1Count:0, t2Count:0, t3Count:0, artistCount:0,
+  manualSplit: false,
+  totalTickets: 100,
+  guestlist: 20,
+  barSpend: 15,
+  venue: 480, ads: 100, media: 0, extra: 0,
+  raFee: 8,
+  profitShare: 100,
+  barMin: 2000,
+  artistNum: 13,
 };
 
 let s = {...DEFAULTS};
 
 function tierRevenue(){
   if(!s.manualSplit){
-    const total = s.totalTickets;
-    s.ebCount = Math.round(total*0.13);
-    s.t1Count = Math.round(total*0.40);
-    s.t2Count = Math.round(total*0.30);
-    s.t3Count = Math.round(total*0.12);
-    s.artistCount = Math.round(total*0.05);
+    const t = s.totalTickets;
+    s.ebCount     = Math.round(t * 0.13);
+    s.t1Count     = Math.round(t * 0.40);
+    s.t2Count     = Math.round(t * 0.30);
+    s.t3Count     = Math.round(t * 0.12);
+    s.artistCount = Math.round(t * 0.05);
   }
   const gross = s.ebCount*s.ebPrice + s.t1Count*s.t1Price + s.t2Count*s.t2Price + s.t3Count*s.t3Price + s.artistCount*s.artistPrice;
-  const net = gross*(1-s.raFee/100);
-  return {gross, net, total: s.ebCount+s.t1Count+s.t2Count+s.t3Count+s.artistCount};
+  const net   = gross * (1 - s.raFee/100);
+  const total = s.ebCount + s.t1Count + s.t2Count + s.t3Count + s.artistCount;
+  return {gross, net, total};
 }
 
 function calc(){
   const {gross, net, total:ticketTotal} = tierRevenue();
-  const attendance = ticketTotal + s.guestlist;
-  const barTotal = attendance * s.barSpend;
-  const barShortfall = Math.max(0, s.barMin - barTotal);
-  const fixedCosts = s.venue + s.ads + s.media + s.extra;
-  const totalCosts = fixedCosts + barShortfall;
-  const revenue = net;
-  const grossProfit = revenue - totalCosts;
-  const artistCut = grossProfit > 0 ? grossProfit*(s.profitShare/100) : 0;
-  const netProfit = grossProfit - artistCut;
-  return {attendance, ticketTotal, barTotal, barShortfall, fixedCosts, totalCosts, revenue, grossProfit, artistCut, netProfit};
+  const attendance    = ticketTotal + s.guestlist;
+  const barTotal      = attendance * s.barSpend;
+  const barShortfall  = Math.max(0, s.barMin - barTotal);
+  const fixedCosts    = s.venue + s.ads + s.media + s.extra;
+  const totalCosts    = fixedCosts + barShortfall;
+  const revenue       = net;
+  const grossProfit   = revenue - totalCosts;
+  const artistCut     = grossProfit > 0 ? grossProfit*(s.profitShare/100) : 0;
+  const netProfit     = grossProfit - artistCut;
+  const perArtist     = s.artistNum > 0 && artistCut > 0 ? artistCut / s.artistNum : 0;
+  return {attendance, ticketTotal, barTotal, barShortfall, fixedCosts, totalCosts, revenue, grossProfit, artistCut, netProfit, perArtist, gross, rFee: gross*(s.raFee/100)};
 }
 
-function fmt(n){return '£'+Math.round(n).toLocaleString()}
-function num(n){return Math.round(n).toLocaleString()}
+const fmt = n => '£' + Math.round(n).toLocaleString();
+const num = n => Math.round(n).toLocaleString();
+
+// Slider + number input pair
+function sliderRow(label, key, min, max, step, unit='', prefix=''){
+  const v = s[key];
+  const display = prefix + (Number.isInteger(step) ? Math.round(v) : v);
+  return `
+  <div class="input-row">
+    <label>${label}</label>
+    <input type="range" min="${min}" max="${max}" step="${step}" value="${v}"
+      oninput="syncSlider('${key}', this.value, '${unit}', '${prefix}')">
+    <input class="num-input" type="number" min="${min}" max="${max}" step="${step}" value="${v}"
+      id="ni_${key}"
+      oninput="syncNum('${key}', this.value)">
+    ${unit ? `<span class="unit">${unit}</span>` : ''}
+  </div>`;
+}
 
 function render(){
   const r = calc();
   const over200 = r.attendance > 200;
   const over260 = r.attendance > 260;
-  let statusClass = r.netProfit >= 0 ? 'good' : 'bad';
-  let statusMsg = r.netProfit >= 0 ? `Profitable by ${fmt(r.netProfit)} after ${s.profitShare}% artist share` : `Loss of ${fmt(Math.abs(r.netProfit))}`;
-  let statusIcon = r.netProfit >= 0 ? '✓' : '✗';
+  const profitable = r.netProfit >= 0;
+  const statusClass = profitable ? 'good' : 'bad';
+  const statusMsg   = profitable
+    ? `Profitable by ${fmt(r.netProfit)} after ${s.profitShare}% artist share`
+    : `Loss of ${fmt(Math.abs(r.netProfit))}`;
 
   document.getElementById('app').innerHTML = `
-<div class="metrics">
+<div class="metrics mb8">
   <div class="metric">
-    <div class="mlabel">Total revenue</div>
-    <div class="mval" style="color:var(--color-text-success)">${fmt(r.revenue)}</div>
+    <div class="mlabel">Revenue</div>
+    <div class="mval" style="color:var(--text-success)">${fmt(r.revenue)}</div>
   </div>
   <div class="metric">
-    <div class="mlabel">Total costs</div>
-    <div class="mval" style="color:var(--color-text-danger)">${fmt(r.totalCosts)}</div>
+    <div class="mlabel">Costs</div>
+    <div class="mval" style="color:var(--text-danger)">${fmt(r.totalCosts)}</div>
   </div>
   <div class="metric">
     <div class="mlabel">Net profit</div>
-    <div class="mval" style="color:${r.netProfit>=0?'var(--color-text-success)':'var(--color-text-danger)'}">${fmt(r.netProfit)}</div>
+    <div class="mval" style="color:${profitable?'var(--text-success)':'var(--text-danger)'}">${fmt(r.netProfit)}</div>
   </div>
 </div>
 
 <div class="status-bar ${statusClass}">
-  <span>${statusIcon} ${statusMsg}</span>
+  <span>${profitable ? '✓' : '✗'} ${statusMsg}</span>
   <span>${num(r.attendance)} through the door</span>
 </div>
 
-${over260?'<div class="status-bar bad">⚠ Over max capacity (260) — reduce attendance</div>':over200?'<div class="status-bar warn">⚠ Above realistic max (200) — approaching hard cap</div>':''}
+${over260 ? `<div class="status-bar bad">⚠ Over max capacity (260) — reduce attendance</div>` :
+  over200 ? `<div class="status-bar warn">⚠ Above realistic max (200) — approaching hard cap</div>` : ''}
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem">
-<div class="section">
-  <div class="section-title">Revenue breakdown</div>
-  <div class="detail-row"><span class="detail-label">Ticket gross</span><span class="detail-val">${fmt(tierRevenue().gross)}</span></div>
-  <div class="detail-row"><span class="detail-label">RA fee (${s.raFee}%)</span><span class="detail-val" style="color:var(--color-text-danger)">−${fmt(tierRevenue().gross*(s.raFee/100))}</span></div>
-  <div class="detail-row"><span class="detail-label">Net ticket revenue</span><span class="detail-val">${fmt(r.revenue)}</span></div>
-</div>
-<div class="section">
-  <div class="section-title">Cost breakdown</div>
-  <div class="detail-row"><span class="detail-label">Venue</span><span class="detail-val">${fmt(s.venue)}</span></div>
-  <div class="detail-row"><span class="detail-label">Advertising</span><span class="detail-val">${fmt(s.ads)}</span></div>
-  <div class="detail-row"><span class="detail-label">Media</span><span class="detail-val">${fmt(s.media)}</span></div>
-  <div class="detail-row"><span class="detail-label">Other</span><span class="detail-val">${fmt(s.extra)}</span></div>
-  <div class="detail-row"><span class="detail-label">Bar shortfall</span><span class="detail-val" style="color:${r.barShortfall>0?'var(--color-text-danger)':'var(--color-text-secondary)'}">
-    ${r.barShortfall>0?'−'+fmt(r.barShortfall):'none (bar covered)'}
-  </span></div>
-</div>
-</div>
-
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem">
-<div class="section">
-  <div class="section-title">Bar minimum</div>
-  <div class="detail-row"><span class="detail-label">Bar min</span><span class="detail-val">${fmt(s.barMin)}</span></div>
-  <div class="detail-row"><span class="detail-label">Expected bar spend</span><span class="detail-val">${fmt(r.barTotal)}</span></div>
-  <div class="detail-row"><span class="detail-label">Shortfall liability</span><span class="detail-val" style="color:${r.barShortfall>0?'var(--color-text-danger)':'var(--color-text-success)'}">
-    ${r.barShortfall>0?fmt(r.barShortfall):'£0 — covered'}
-  </span></div>
-</div>
-<div class="section">
-  <div class="section-title">Artist profit share</div>
-  <div class="detail-row"><span class="detail-label">Gross profit</span><span class="detail-val">${fmt(r.grossProfit)}</span></div>
-  <div class="detail-row"><span class="detail-label">Artist share (${s.profitShare}%)</span><span class="detail-val">${fmt(r.artistCut)}</span></div>
-  <div class="detail-row"><span class="detail-label">Your take-home</span><span class="detail-val">${fmt(r.netProfit)}</span></div>
-</div>
-</div>
-
-<div class="section">
-  <div class="section-title">Ticket inputs</div>
-  <div class="toggle-row">
-    <span>Ticket split:</span>
-    <button class="split-btn" onclick="toggleSplit()">${s.manualSplit?'Switch to auto-split':'Switch to manual'}</button>
-    ${!s.manualSplit?`<span style="font-size:12px">auto-split from total tickets sold</span>`:''}
+<div class="two-col mb8">
+  <div class="section" style="margin-bottom:0">
+    <div class="section-title">Revenue</div>
+    <div class="detail-row"><span class="detail-label">Ticket gross</span><span class="detail-val">${fmt(r.gross)}</span></div>
+    <div class="detail-row"><span class="detail-label">RA fee (${s.raFee}%)</span><span class="detail-val" style="color:var(--text-danger)">−${fmt(r.rFee)}</span></div>
+    <div class="detail-row"><span class="detail-label">Net ticket revenue</span><span class="detail-val">${fmt(r.revenue)}</span></div>
   </div>
-  ${!s.manualSplit?`
-  <div class="row">
-    <label>Total tickets sold</label>
-    <input type="range" min="0" max="240" step="1" value="${s.totalTickets}" oninput="update('totalTickets',+this.value)">
-    <span class="val">${s.totalTickets}</span>
-  </div>`:`
-  <div class="tier-grid">
+  <div class="section" style="margin-bottom:0">
+    <div class="section-title">Costs</div>
+    <div class="detail-row"><span class="detail-label">Venue</span><span class="detail-val">${fmt(s.venue)}</span></div>
+    <div class="detail-row"><span class="detail-label">Advertising</span><span class="detail-val">${fmt(s.ads)}</span></div>
+    <div class="detail-row"><span class="detail-label">Media</span><span class="detail-val">${fmt(s.media)}</span></div>
+    <div class="detail-row"><span class="detail-label">Other</span><span class="detail-val">${fmt(s.extra)}</span></div>
+    <div class="detail-row"><span class="detail-label">Bar shortfall</span>
+      <span class="detail-val" style="color:${r.barShortfall>0?'var(--text-danger)':'var(--text-secondary)'}">
+        ${r.barShortfall>0 ? '−'+fmt(r.barShortfall) : 'none'}
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="two-col mb8">
+  <div class="section" style="margin-bottom:0">
+    <div class="section-title">Bar minimum</div>
+    <div class="detail-row"><span class="detail-label">Bar min</span><span class="detail-val">${fmt(s.barMin)}</span></div>
+    <div class="detail-row"><span class="detail-label">Expected spend</span><span class="detail-val">${fmt(r.barTotal)}</span></div>
+    <div class="detail-row"><span class="detail-label">Shortfall</span>
+      <span class="detail-val" style="color:${r.barShortfall>0?'var(--text-danger)':'var(--text-success)'}">
+        ${r.barShortfall>0 ? fmt(r.barShortfall) : '£0 — covered'}
+      </span>
+    </div>
+  </div>
+  <div class="section" style="margin-bottom:0">
+    <div class="section-title">Artist profit share</div>
+    <div class="detail-row"><span class="detail-label">Gross profit</span><span class="detail-val">${fmt(r.grossProfit)}</span></div>
+    <div class="detail-row"><span class="detail-label">Artist share (${s.profitShare}%)</span><span class="detail-val">${fmt(r.artistCut)}</span></div>
+    <div class="detail-row"><span class="detail-label">Artists (${s.artistNum})</span><span class="detail-val">${fmt(r.perArtist)} /artist</span></div>
+    <div class="detail-row"><span class="detail-label">Your take-home</span><span class="detail-val">${fmt(r.netProfit)}</span></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+    <span>Ticket inputs</span>
+    <button class="reset-btn" onclick="resetDefaults()">Reset defaults</button>
+  </div>
+  <div class="toggle-row">
+    <button class="pill-btn ${!s.manualSplit?'active':''}" onclick="setSplit(false)">Auto-split</button>
+    <button class="pill-btn ${s.manualSplit?'active':''}"  onclick="setSplit(true)">Manual</button>
+    ${!s.manualSplit ? `<span style="font-size:12px;color:var(--text-secondary)">split from total sold</span>` : ''}
+  </div>
+
+  ${!s.manualSplit ? sliderRow('Total tickets sold', 'totalTickets', 0, 240, 1) : `
+  <div class="tier-grid mt">
     <div class="tier-cell"><label>Early Bird (£${s.ebPrice})</label><input type="number" min="0" value="${s.ebCount}" oninput="update('ebCount',+this.value)"></div>
     <div class="tier-cell"><label>Tier 1 (£${s.t1Price})</label><input type="number" min="0" value="${s.t1Count}" oninput="update('t1Count',+this.value)"></div>
     <div class="tier-cell"><label>Tier 2 (£${s.t2Price})</label><input type="number" min="0" value="${s.t2Count}" oninput="update('t2Count',+this.value)"></div>
     <div class="tier-cell"><label>Tier 3 / day-of (£${s.t3Price})</label><input type="number" min="0" value="${s.t3Count}" oninput="update('t3Count',+this.value)"></div>
-    <div class="tier-cell"><label>Artist discount (£${s.artistPrice})</label><input type="number" min="0" value="${s.artistCount}" oninput="update('artistCount',+this.value)"></div>
+    <div class="tier-cell"><label>Artist disc. (£${s.artistPrice})</label><input type="number" min="0" value="${s.artistCount}" oninput="update('artistCount',+this.value)"></div>
   </div>`}
-  <div class="row" style="margin-top:10px">
-    <label>Guestlist (free)</label>
-    <input type="range" min="0" max="50" step="1" value="${s.guestlist}" oninput="update('guestlist',+this.value)">
-    <span class="val">${s.guestlist}</span>
-  </div>
-  <div class="row">
-    <label>Bar spend per head</label>
-    <input type="range" min="0" max="40" step="1" value="${s.barSpend}" oninput="update('barSpend',+this.value)">
-    <span class="val">£${s.barSpend}</span>
+
+  <div class="mt">
+    ${sliderRow('Guestlist (free)', 'guestlist', 0, 50, 1)}
+    ${sliderRow('Bar spend per head', 'barSpend', 0, 40, 1, '', '£')}
   </div>
 </div>
 
 <div class="section">
-  <div class="section-title">Ticket tier prices</div>
+  <div class="section-title">Ticket tier prices (£)</div>
   <div class="tier-grid">
     <div class="tier-cell"><label>Early Bird</label><input type="number" min="1" value="${s.ebPrice}" oninput="update('ebPrice',+this.value)"></div>
     <div class="tier-cell"><label>Tier 1</label><input type="number" min="1" value="${s.t1Price}" oninput="update('t1Price',+this.value)"></div>
@@ -259,26 +473,47 @@ ${over260?'<div class="status-bar bad">⚠ Over max capacity (260) — reduce at
     <div class="tier-cell"><label>Media (£)</label><input type="number" min="0" value="${s.media}" oninput="update('media',+this.value)"></div>
     <div class="tier-cell"><label>Other costs (£)</label><input type="number" min="0" value="${s.extra}" oninput="update('extra',+this.value)"></div>
     <div class="tier-cell"><label>Bar minimum (£)</label><input type="number" min="0" value="${s.barMin}" oninput="update('barMin',+this.value)"></div>
-    <div class="tier-cell"><label>RA fee (%)</label><input type="number" min="0" max="20" value="${s.raFee}" oninput="update('raFee',+this.value)"></div>
+    <div class="tier-cell"><label>RA fee (%)</label><input type="number" min="0" max="20" step="0.5" value="${s.raFee}" oninput="update('raFee',+this.value)"></div>
   </div>
-  <div class="row" style="margin-top:12px">
-    <label>Artist profit share (%)</label>
-    <input type="range" min="0" max="100" step="5" value="${s.profitShare}" oninput="update('profitShare',+this.value)">
-    <span class="val">${s.profitShare}%</span>
+  <div class="mt">
+    ${sliderRow('Artist profit share (%)', 'profitShare', 0, 100, 5, '%')}
+    ${sliderRow('Number of artists', 'artistNum', 1, 30, 1)}
   </div>
 </div>
 `;
 }
 
 function update(key, val){
-  s[key] = val;
+  s[key] = isNaN(val) ? s[key] : val;
   render();
 }
 
-function toggleSplit(){
-  s.manualSplit = !s.manualSplit;
+function syncSlider(key, val){
+  s[key] = +val;
+  const ni = document.getElementById('ni_' + key);
+  if(ni) ni.value = Math.round(+val * 10) / 10;
+  render();
+}
+
+function syncNum(key, val){
+  const v = parseFloat(val);
+  if(isNaN(v)) return;
+  s[key] = v;
+  // update paired range if exists (can't directly target without re-render, render handles it)
+  render();
+}
+
+function setSplit(manual){
+  s.manualSplit = manual;
+  render();
+}
+
+function resetDefaults(){
+  s = {...DEFAULTS};
   render();
 }
 
 render();
 </script>
+</body>
+</html>
